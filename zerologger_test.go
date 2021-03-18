@@ -11,7 +11,9 @@ import (
 	"czechia.dev/zerologger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/valyala/fasthttp"
 )
 
 type stdout struct {
@@ -147,4 +149,30 @@ func Test_LoggerConfig(t *testing.T) {
 
 		app.Shutdown()
 	}
+}
+
+func Benchmark_Logger(b *testing.B) {
+	log.Logger = zerolog.New(io.Discard).With().Timestamp().Logger()
+
+	app := fiber.New()
+	app.Use(zerologger.New())
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World!")
+	})
+
+	h := app.Handler()
+
+	ctx := &fasthttp.RequestCtx{}
+	ctx.Request.Header.SetMethod("GET")
+	ctx.Request.SetRequestURI("/")
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		h(ctx)
+	}
+
+	utils.AssertEqual(b, 200, ctx.Response.Header.StatusCode())
 }
