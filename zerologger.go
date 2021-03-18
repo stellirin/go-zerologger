@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -55,25 +56,26 @@ func New(config ...Config) fiber.Handler {
 		// Set latency stop time
 		stop := time.Now()
 
-		zerolog := log.Logger.With().
+		var event *zerolog.Event
+		switch {
+		case ctx.Response().StatusCode() == fiber.StatusOK:
+			event = log.Info()
+		case ctx.Response().StatusCode() >= fiber.StatusBadRequest && ctx.Response().StatusCode() < fiber.StatusInternalServerError:
+			event = log.Warn()
+		case ctx.Response().StatusCode() >= fiber.StatusInternalServerError:
+			event = log.Error()
+		default:
+			event = log.Debug()
+		}
+
+		event.
 			Int("status", ctx.Response().StatusCode()).
 			Dur("latency", stop.Sub(start)).
 			Str("ip", ctx.IP()).
 			Str("method", ctx.Method()).
 			Str("path", ctx.Path()).
 			Str("user-agent", ctx.Get(fiber.HeaderUserAgent)).
-			Logger()
-
-		switch {
-		case ctx.Response().StatusCode() == fiber.StatusOK:
-			zerolog.Info().Msg(msg)
-		case ctx.Response().StatusCode() >= fiber.StatusBadRequest && ctx.Response().StatusCode() < fiber.StatusInternalServerError:
-			zerolog.Warn().Msg(msg)
-		case ctx.Response().StatusCode() >= fiber.StatusInternalServerError:
-			zerolog.Error().Msg(msg)
-		default:
-			zerolog.Debug().Msg(msg)
-		}
+			Msg(msg)
 
 		// End chain
 		return nil
