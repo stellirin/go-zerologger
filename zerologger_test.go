@@ -85,7 +85,7 @@ func Test_Logger(t *testing.T) {
 
 		data, _ := io.ReadAll(buf)
 		json.Unmarshal(data, tt.args.out)
-		utils.AssertEqual(t, tt.name, tt.args.out.Message)
+		utils.AssertEqual(t, zerologger.StatusMessage[tt.args.status], tt.args.out.Message)
 
 		app.Shutdown()
 	}
@@ -95,7 +95,7 @@ func Test_LoggerConfig(t *testing.T) {
 	type args struct {
 		out    *stdout
 		config []zerologger.Config
-		result string
+		status int
 	}
 
 	buf := new(bytes.Buffer)
@@ -110,7 +110,7 @@ func Test_LoggerConfig(t *testing.T) {
 			args: args{
 				out:    new(stdout),
 				config: []zerologger.Config{zerologger.ConfigDefault},
-				result: "default",
+				status: fiber.StatusOK,
 			},
 		},
 		{
@@ -118,7 +118,7 @@ func Test_LoggerConfig(t *testing.T) {
 			args: args{
 				out:    new(stdout),
 				config: []zerologger.Config{{Next: func(ctx *fiber.Ctx) bool { return false }}},
-				result: "false",
+				status: fiber.StatusOK,
 			},
 		},
 		{
@@ -126,7 +126,7 @@ func Test_LoggerConfig(t *testing.T) {
 			args: args{
 				out:    new(stdout),
 				config: []zerologger.Config{{Next: func(ctx *fiber.Ctx) bool { return true }}},
-				result: "",
+				status: 0,
 			},
 		},
 	}
@@ -136,7 +136,7 @@ func Test_LoggerConfig(t *testing.T) {
 		app.Use(zerologger.New(tt.args.config...))
 		app.Get("/", func(ctx *fiber.Ctx) error {
 			ctx.WriteString(tt.name)
-			return fiber.NewError(fiber.StatusOK, tt.args.result)
+			return fiber.NewError(fiber.StatusOK)
 		})
 
 		resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
@@ -145,7 +145,7 @@ func Test_LoggerConfig(t *testing.T) {
 
 		data, _ := io.ReadAll(buf)
 		json.Unmarshal(data, tt.args.out)
-		utils.AssertEqual(t, tt.args.result, tt.args.out.Message)
+		utils.AssertEqual(t, zerologger.StatusMessage[tt.args.status], tt.args.out.Message)
 
 		app.Shutdown()
 	}
