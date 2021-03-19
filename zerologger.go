@@ -43,14 +43,11 @@ func New(config ...Config) fiber.Handler {
 		// Handle request, store err for logging
 		chainErr := ctx.Next()
 
-		msg := "OK"
-
 		// Manually call error handler
 		if chainErr != nil {
 			if err := errHandler(ctx, chainErr); err != nil {
 				_ = ctx.SendStatus(fiber.StatusInternalServerError)
 			}
-			msg = chainErr.Error()
 		}
 
 		// Set latency stop time
@@ -71,11 +68,9 @@ func New(config ...Config) fiber.Handler {
 		event.
 			Int("status", ctx.Response().StatusCode()).
 			Dur("latency", stop.Sub(start)).
-			Str("ip", ctx.IP()).
 			Str("method", ctx.Method()).
 			Str("path", ctx.Path()).
-			Str("user-agent", ctx.Get(fiber.HeaderUserAgent)).
-			Msg(msg)
+			Send()
 
 		// End chain
 		return nil
