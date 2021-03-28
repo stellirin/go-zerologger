@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -51,10 +52,35 @@ func New(config ...Config) fiber.Handler {
 	// Set default config
 	cfg := configDefault(config...)
 
+	// Get timezone location
+	tz, err := time.LoadLocation(cfg.TimeZone)
+	if err != nil || tz == nil {
+		cfg.timeZoneLocation = time.Local
+	} else {
+		cfg.timeZoneLocation = tz
+	}
+
 	// Check if format contains latency
 	for _, tag := range cfg.Format {
 		if tag == TagLatency {
 			cfg.enableLatency = true
+			break
+		}
+	}
+
+	// Create correct timeformat
+	var timestamp atomic.Value
+	timestamp.Store(time.Now().In(cfg.timeZoneLocation).Format(cfg.TimeFormat))
+
+	// Update date/time every 750 milliseconds in a separate go routine
+	for _, tag := range cfg.Format {
+		if tag == TagTime {
+			go func() {
+				for {
+					time.Sleep(cfg.TimeInterval)
+					timestamp.Store(time.Now().In(cfg.timeZoneLocation).Format(cfg.TimeFormat))
+				}
+			}()
 			break
 		}
 	}
@@ -120,7 +146,7 @@ func New(config ...Config) fiber.Handler {
 		for _, tag := range cfg.Format {
 			switch tag {
 			case TagTime:
-				// NOOP: Zerolog already includes the time
+				event = event.Str(TagTime, timestamp.Load().(string))
 			case TagReferer:
 				event = event.Str(TagReferer, ctx.Get(fiber.HeaderReferer))
 			case TagProtocol:

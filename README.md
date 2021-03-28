@@ -11,43 +11,26 @@ A simple package to use [Zerolog](https://github.com/rs/zerolog) as the Logger f
 go get -u czechia.dev/zerologger
 ```
 
-## ⏱ Benchmarks
+## 📝 Format
 
-Zerolog middleware for Fiber is slower than the default Fiber logger, but its main advantage is that it can produce both structured and pretty logs.
+Zerolog middleware for Fiber is heavily based on the default Logger middleware for Fiber. The key differences are:
 
-Below are some benchmarks with:
+* uses a slice of strings to define the log format
+* no color output options, zerolog does not support it
 
-1. Default format without time
-1. Default format with time
-1. All tags enabled
+The recommended method is to pass in a slice using the provided constants:
 
-### Zerologger
-
-```txt
-goos: darwin
-goarch: amd64
-pkg: czechia.dev/zerologger
-cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
-Benchmark_Logger-8   	 2296683	       498.0 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Logger-8   	 1478088	       807.3 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Logger-8   	  749281	      1615   ns/op	       8 B/op	       1 allocs/op
-PASS
-ok  	czechia.dev/zerologger	1.314s
+```go
+Format: []string{
+	zerologger.TagTime,
+	zerologger.TagStatus,
+	zerologger.TagLatency,
+	zerologger.TagMethod,
+	zerologger.TagPath,
+}
 ```
 
-### Logger
-
-```txt
-goos: darwin
-goarch: amd64
-pkg: github.com/gofiber/fiber/v2/middleware/logger
-cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
-Benchmark_Logger-8   	 2918078	       399.8 ns/op	       4 B/op	       1 allocs/op
-Benchmark_Logger-8   	 2866551	       419.2 ns/op	       4 B/op	       1 allocs/op
-Benchmark_Logger-8   	  938065	      1106   ns/op	      16 B/op	       2 allocs/op
-PASS
-ok  	github.com/gofiber/fiber/v2/middleware/logger	1.318s
-```
+Some constants have a trailing semicolon. These can be used to extract data from the current context, so that `header:x-test-header` will add `"x-test-header": "test-value"` to the log.
 
 ## 👀 Example
 
@@ -58,17 +41,29 @@ import (
 	"os"
 	"time"
 
-	"czechia.dev/zerologger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"czechia.dev/zerologger"
 )
 
 func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
+	log.Logger = zerolog.New(os.Stdout)
 
 	app := fiber.New()
-	app.Use(zerologger.New())
+	app.Use(zerologger.New(zerologger.Config{
+		Format: []string{
+			zerologger.TagTime,
+			zerologger.TagStatus,
+			zerologger.TagLatency,
+			zerologger.TagMethod,
+			zerologger.TagPath,
+		},
+		TimeFormat:   time.RFC3339,
+		TimeZone:     "UTC",
+		TimeInterval: 500 * time.Millisecond,
+	}))
 
 	app.Get("/", func(ctx *fiber.Ctx) error {
 		return ctx.SendString("Hello, World! 👋")
@@ -77,30 +72,6 @@ func main() {
 	app.Listen(":8080")
 }
 ```
-
-## 📝 Format
-
-Zerolog middleware for Fiber is heavily based on the default Logger middleware for Fiber. The key differences are:
-
-* uses a slice of strings to define the log format
-* no color output options, zerolog does not support it
-* no time format options, uses the global Zerolog time format
-
-The recommended method is to pass in a slice using the provided constants:
-
-```go
-app.Use(zerologger.New(zerologger.Config{
-	Format: []string{
-		zerologger.TagTime,
-		zerologger.TagStatus,
-		zerologger.TagLatency,
-		zerologger.TagMethod,
-		zerologger.TagPath,
-	},
-}))
-```
-
-Some constants have a trailing semicolon. These can be used to extract data from the current context, so that `header:x-test-header` will add `"x-test-header": "test-value"` to the log.
 
 ## 🧬 Constants
 
@@ -134,4 +105,46 @@ const (
 	TagForm              = "form:"
 	TagCookie            = "cookie:"
 )
+```
+
+## ⏱ Benchmarks
+
+Zerolog middleware for Fiber is _slightly_ slower than the default Fiber logger. Its main advantage is that Zerolog can be configured to produce both structured and pretty logs.
+
+Below are some benchmarks with:
+
+1. Default format without time
+1. Default format with time
+1. **All** tags enabled
+
+This shows that printing logs with the Zerolog middleware for Fiber takes approximately 25% longer than the default Logger middleware, with the gap closing as the number of fields increases.
+
+This is however still **extremely** efficient, 500ns is a negligible part of processing a request.
+
+### Zerologger
+
+```txt
+goos: darwin
+goarch: amd64
+pkg: czechia.dev/zerologger
+cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Benchmark_Logger-8   	 2258288	       506.4 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Logger-8   	 2203069	       536.0 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Logger-8   	  862860	      1321   ns/op	       8 B/op	       1 allocs/op
+PASS
+ok  	czechia.dev/zerologger	1.282s
+```
+
+### Logger
+
+```txt
+goos: darwin
+goarch: amd64
+pkg: github.com/gofiber/fiber/v2/middleware/logger
+cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Benchmark_Logger-8   	 2918078	       399.8 ns/op	       4 B/op	       1 allocs/op
+Benchmark_Logger-8   	 2866551	       419.2 ns/op	       4 B/op	       1 allocs/op
+Benchmark_Logger-8   	  938065	      1106   ns/op	      16 B/op	       2 allocs/op
+PASS
+ok  	github.com/gofiber/fiber/v2/middleware/logger	1.318s
 ```

@@ -37,7 +37,7 @@ func Test_LoggerStatus(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	log.Logger = log.Output(buf)
+	log.Logger = zerolog.New(buf)
 
 	tests := []struct {
 		name string
@@ -101,7 +101,7 @@ func Test_LoggerConfig(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	log.Logger = log.Output(buf)
+	log.Logger = zerolog.New(buf)
 
 	tests := []struct {
 		name string
@@ -118,16 +118,28 @@ func Test_LoggerConfig(t *testing.T) {
 		{
 			name: "false",
 			args: args{
-				out:    new(stdout),
-				config: []Config{{Next: func(ctx *fiber.Ctx) bool { return false }}},
+				out: new(stdout),
+				config: []Config{{
+					Next:         func(ctx *fiber.Ctx) bool { return false },
+					Format:       ConfigDefault.Format,
+					TimeFormat:   ConfigDefault.TimeFormat,
+					TimeZone:     ConfigDefault.TimeZone,
+					TimeInterval: ConfigDefault.TimeInterval,
+				}},
 				status: fiber.StatusOK,
 			},
 		},
 		{
 			name: "true",
 			args: args{
-				out:    new(stdout),
-				config: []Config{{Next: func(ctx *fiber.Ctx) bool { return true }}},
+				out: new(stdout),
+				config: []Config{{
+					Next:         func(ctx *fiber.Ctx) bool { return true },
+					Format:       ConfigDefault.Format,
+					TimeFormat:   ConfigDefault.TimeFormat,
+					TimeZone:     ConfigDefault.TimeZone,
+					TimeInterval: ConfigDefault.TimeInterval,
+				}},
 				status: 0,
 			},
 		},
@@ -136,7 +148,23 @@ func Test_LoggerConfig(t *testing.T) {
 			args: args{
 				out: new(stdout),
 				config: []Config{{
-					Format: []string{TagPid, TagTime, TagReferer, TagProtocol, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagLatency, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:x-test", "query:q-test", "form:f-test", "cookie:c-test", "locals:l-bytes", "locals:l-string", "locals:l-uuid"},
+					Format:       []string{TagPid, TagTime, TagReferer, TagProtocol, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagLatency, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:x-test", "query:q-test", "form:f-test", "cookie:c-test", "locals:l-bytes", "locals:l-string", "locals:l-uuid"},
+					TimeFormat:   ConfigDefault.TimeFormat,
+					TimeZone:     ConfigDefault.TimeZone,
+					TimeInterval: ConfigDefault.TimeInterval,
+				}},
+				status: fiber.StatusOK,
+			},
+		},
+		{
+			name: "timezone",
+			args: args{
+				out: new(stdout),
+				config: []Config{{
+					Format:       ConfigDefault.Format,
+					TimeFormat:   ConfigDefault.TimeFormat,
+					TimeZone:     "Fake/TimeZone",
+					TimeInterval: ConfigDefault.TimeInterval,
 				}},
 				status: fiber.StatusOK,
 			},
@@ -172,7 +200,7 @@ func Test_LoggerConfig(t *testing.T) {
 }
 
 func Benchmark_Logger(b *testing.B) {
-	log.Logger = zerolog.New(io.Discard).With().Timestamp().Logger()
+	log.Logger = zerolog.New(io.Discard)
 
 	app := fiber.New()
 	app.Use(New())

@@ -1,6 +1,8 @@
 package zerologger
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,13 +20,32 @@ type Config struct {
 	// Optional. Default: 'time status latency method path'
 	Format []string
 
-	enableLatency bool
+	// TimeFormat https://programming.guide/go/format-parse-string-time-date-example.html
+	//
+	// Optional. Default: time.RFC3339
+	TimeFormat string
+
+	// TimeZone can be specified, such as "UTC" and "America/New_York" and "Asia/Chongqing", etc
+	//
+	// Optional. Default: "Local"
+	TimeZone string
+
+	// TimeInterval is the delay before the timestamp is updated
+	//
+	// Optional. Default: 500 * time.Millisecond
+	TimeInterval time.Duration
+
+	enableLatency    bool
+	timeZoneLocation *time.Location
 }
 
 // ConfigDefault is the default config
 var ConfigDefault = Config{
-	Next:   nil,
-	Format: []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath},
+	Next:         nil,
+	Format:       []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath},
+	TimeFormat:   time.RFC3339,
+	TimeZone:     "Local",
+	TimeInterval: 500 * time.Millisecond,
 }
 
 // Helper function to set default values
