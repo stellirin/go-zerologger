@@ -8,12 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"czechia.dev/zerologger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/gofrs/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
+
+	. "czechia.dev/zerologger"
 )
 
 type stdout struct {
@@ -28,7 +30,7 @@ type stdout struct {
 	Message string    `json:"message"`
 }
 
-func Test_Logger(t *testing.T) {
+func Test_LoggerStatus(t *testing.T) {
 	type args struct {
 		out    *stdout
 		status int
@@ -73,7 +75,7 @@ func Test_Logger(t *testing.T) {
 
 	for _, tt := range tests {
 		app := fiber.New()
-		app.Use(zerologger.New())
+		app.Use(New())
 		app.Get("/", func(ctx *fiber.Ctx) error {
 			ctx.WriteString(tt.name)
 			return fiber.NewError(tt.args.status, tt.name)
@@ -85,7 +87,7 @@ func Test_Logger(t *testing.T) {
 
 		data, _ := io.ReadAll(buf)
 		json.Unmarshal(data, tt.args.out)
-		utils.AssertEqual(t, zerologger.StatusMessage[tt.args.status], tt.args.out.Message)
+		utils.AssertEqual(t, StatusMessage[tt.args.status], tt.args.out.Message)
 
 		app.Shutdown()
 	}
@@ -94,7 +96,7 @@ func Test_Logger(t *testing.T) {
 func Test_LoggerConfig(t *testing.T) {
 	type args struct {
 		out    *stdout
-		config []zerologger.Config
+		config []Config
 		status int
 	}
 
@@ -109,7 +111,7 @@ func Test_LoggerConfig(t *testing.T) {
 			name: "default",
 			args: args{
 				out:    new(stdout),
-				config: []zerologger.Config{zerologger.ConfigDefault},
+				config: []Config{ConfigDefault},
 				status: fiber.StatusOK,
 			},
 		},
@@ -117,7 +119,7 @@ func Test_LoggerConfig(t *testing.T) {
 			name: "false",
 			args: args{
 				out:    new(stdout),
-				config: []zerologger.Config{{Next: func(ctx *fiber.Ctx) bool { return false }}},
+				config: []Config{{Next: func(ctx *fiber.Ctx) bool { return false }}},
 				status: fiber.StatusOK,
 			},
 		},
@@ -125,27 +127,45 @@ func Test_LoggerConfig(t *testing.T) {
 			name: "true",
 			args: args{
 				out:    new(stdout),
-				config: []zerologger.Config{{Next: func(ctx *fiber.Ctx) bool { return true }}},
+				config: []Config{{Next: func(ctx *fiber.Ctx) bool { return true }}},
 				status: 0,
+			},
+		},
+		{
+			name: "full",
+			args: args{
+				out: new(stdout),
+				config: []Config{{
+					Format: []string{TagPid, TagTime, TagReferer, TagProtocol, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagLatency, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:x-test", "query:q-test", "form:f-test", "cookie:c-test", "locals:l-bytes", "locals:l-string", "locals:l-uuid"},
+				}},
+				status: fiber.StatusOK,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		app := fiber.New()
-		app.Use(zerologger.New(tt.args.config...))
+		app.Use(New(tt.args.config...))
 		app.Get("/", func(ctx *fiber.Ctx) error {
+			ctx.Locals("l-bytes", []byte("test"))
+			ctx.Locals("l-string", "test")
+			ctx.Locals("l-uuid", uuid.Nil)
 			ctx.WriteString(tt.name)
 			return fiber.NewError(fiber.StatusOK)
 		})
 
-		resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
+		req := httptest.NewRequest("GET", "/?q-test=test", nil)
+		req.Header = map[string][]string{
+			"x-test": {"test"},
+		}
+
+		resp, err := app.Test(req)
 		utils.AssertEqual(t, nil, err)
 		utils.AssertEqual(t, fiber.StatusOK, resp.StatusCode)
 
 		data, _ := io.ReadAll(buf)
 		json.Unmarshal(data, tt.args.out)
-		utils.AssertEqual(t, zerologger.StatusMessage[tt.args.status], tt.args.out.Message)
+		utils.AssertEqual(t, StatusMessage[tt.args.status], tt.args.out.Message)
 
 		app.Shutdown()
 	}
@@ -155,7 +175,7 @@ func Benchmark_Logger(b *testing.B) {
 	log.Logger = zerolog.New(io.Discard).With().Timestamp().Logger()
 
 	app := fiber.New()
-	app.Use(zerologger.New())
+	app.Use(New())
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")

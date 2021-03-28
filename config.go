@@ -1,6 +1,8 @@
 package zerologger
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 // Config defines the Zerolog config for the Fiber middleware.
 //
@@ -10,11 +12,19 @@ type Config struct {
 	//
 	// Optional. Default: nil
 	Next func(ctx *fiber.Ctx) bool
+
+	// Format defines the logging tags
+	//
+	// Optional. Default: 'time status latency method path'
+	Format []string
+
+	enableLatency bool
 }
 
 // ConfigDefault is the default config
 var ConfigDefault = Config{
-	Next: nil,
+	Next:   nil,
+	Format: []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath},
 }
 
 // Helper function to set default values

@@ -39,3 +39,61 @@ func main() {
 	app.Listen(":8080")
 }
 ```
+
+## 📝 Format
+
+Zerolog middleware for Fiber is heavily based on the default Logger middleware for Fiber. The key differences are:
+
+* uses a slice of strings to define the log format
+* no color output options, zerolog does not support it
+* no time format options, uses the global Zerolog time format
+
+The recommended method is to pass in a slice using the provided constants:
+
+```go
+app.Use(zerologger.New(zerologger.Config{
+	Format: []string{
+		zerologger.TagTime,
+		zerologger.TagStatus,
+		zerologger.TagLatency,
+		zerologger.TagMethod,
+		zerologger.TagPath,
+	},
+}))
+```
+
+Some constants have a trailing semicolon. These can be used to extract data from the current context, so that `header:x-test-header` will add `"x-test-header": "test-value"` to the log.
+
+## 🧬 Constants
+
+```go
+// Logger variables
+const (
+	TagPid               = "pid"
+	TagTime              = "time"
+	TagReferer           = "referer"
+	TagProtocol          = "protocol"
+	TagIP                = "ip"
+	TagIPs               = "ips"
+	TagHost              = "host"
+	TagMethod            = "method"
+	TagPath              = "path"
+	TagURL               = "url"
+	TagUA                = "ua"
+	TagLatency           = "latency"
+	TagStatus            = "status"
+	TagResBody           = "resBody"
+	TagQueryStringParams = "queryParams"
+	TagBody              = "body"
+	TagBytesSent         = "bytesSent"
+	TagBytesReceived     = "bytesReceived"
+	TagRoute             = "route"
+	TagError             = "error"
+
+	TagHeader            = "header:"
+	TagLocals            = "locals:"
+	TagQuery             = "query:"
+	TagForm              = "form:"
+	TagCookie            = "cookie:"
+)
+```
