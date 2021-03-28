@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/stellirin/fiber-zerologger/branch/main/graph/badge.svg?token=3FRCIF5YDW)](https://codecov.io/gh/stellirin/fiber-zerologger)
 [![Test Action Status](https://github.com/stellirin/fiber-zerologger/workflows/Go/badge.svg)](https://github.com/stellirin/fiber-zerologger/actions?query=workflow%3AGo)
 
-A simple package to use Zerolog as the Logger for Fiber.
+A simple package to use [Zerolog](https://github.com/rs/zerolog) as the Logger for Fiber.
 
 ## ⚙️ Installation
 

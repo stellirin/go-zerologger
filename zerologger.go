@@ -175,13 +175,13 @@ func New(config ...Config) fiber.Handler {
 				case strings.HasPrefix(tag, TagLocals):
 					switch v := ctx.Locals(tag[7:]).(type) {
 					case []byte:
-						event = event.Bytes("tag[7:]", v)
+						event = event.Bytes(tag[7:], v)
 					case string:
-						event = event.Str("tag[7:]", v)
+						event = event.Str(tag[7:], v)
 					case nil:
 						// NOOP
 					default:
-						event = event.Str("tag[7:]", fmt.Sprintf("%v", v))
+						event = event.Str(tag[7:], fmt.Sprintf("%v", v))
 					}
 				}
 			}
