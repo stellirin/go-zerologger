@@ -11,6 +11,44 @@ A simple package to use Zerolog as the Logger for Fiber.
 go get -u czechia.dev/zerologger
 ```
 
+## ⏱ Benchmarks
+
+Zerolog middleware for Fiber is slower than the default Fiber logger, but its main advantage is that it can produce both structured and pretty logs.
+
+Below are some benchmarks with:
+
+1. Default format without time
+1. Default format with time
+1. All tags enabled
+
+### Zerologger
+
+```txt
+goos: darwin
+goarch: amd64
+pkg: czechia.dev/zerologger
+cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Benchmark_Logger-8   	 2296683	       498.0 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Logger-8   	 1478088	       807.3 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Logger-8   	  749281	      1615   ns/op	       8 B/op	       1 allocs/op
+PASS
+ok  	czechia.dev/zerologger	1.314s
+```
+
+### Logger
+
+```txt
+goos: darwin
+goarch: amd64
+pkg: github.com/gofiber/fiber/v2/middleware/logger
+cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Benchmark_Logger-8   	 2918078	       399.8 ns/op	       4 B/op	       1 allocs/op
+Benchmark_Logger-8   	 2866551	       419.2 ns/op	       4 B/op	       1 allocs/op
+Benchmark_Logger-8   	  938065	      1106   ns/op	      16 B/op	       2 allocs/op
+PASS
+ok  	github.com/gofiber/fiber/v2/middleware/logger	1.318s
+```
+
 ## 👀 Example
 
 ```go
