@@ -16,13 +16,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 
 	. "czechia.dev/zerologger"
 )
 
 type StdOut struct {
+	Severity      string `json:"severity"`
 	Pid           string `json:"pid"`
 	Time          string `json:"time"`
 	Referer       string `json:"referer"`
@@ -49,7 +49,7 @@ type StdOut struct {
 
 func Test_Logger(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
+	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(New(Config{
@@ -72,7 +72,7 @@ func Test_Logger(t *testing.T) {
 
 func Test_Logger_locals(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
+	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(New(Config{
@@ -161,7 +161,7 @@ func Test_Logger_ErrorTimeZone(t *testing.T) {
 
 func Test_Logger_All(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
+	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(New(Config{
@@ -180,7 +180,7 @@ func Test_Logger_All(t *testing.T) {
 
 func Test_Query_Params(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
+	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(New(Config{
@@ -201,7 +201,7 @@ func Test_Query_Params(t *testing.T) {
 
 func Test_Response_Body(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
+	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(New(Config{
@@ -239,7 +239,7 @@ func Test_Response_Body(t *testing.T) {
 
 func Test_Logger_AppendUint(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
+	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(New(Config{
@@ -266,7 +266,7 @@ func Test_Logger_AppendUint(t *testing.T) {
 
 func Test_Logger_Data_Race(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
+	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(New())
@@ -296,7 +296,7 @@ func Test_Logger_Data_Race(t *testing.T) {
 
 func Test_Logger_Redirect(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
+	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(New(Config{
@@ -315,7 +315,7 @@ func Test_Logger_Redirect(t *testing.T) {
 }
 
 func Benchmark_Logger(b *testing.B) {
-	log.Logger = zerolog.New(io.Discard)
+	Logger = zerolog.New(io.Discard)
 
 	app := fiber.New()
 
@@ -342,4 +342,11 @@ func Benchmark_Logger(b *testing.B) {
 	}
 
 	utils.AssertEqual(b, 200, fctx.Response.Header.StatusCode())
+}
+
+// Dummy test for code coverage
+// Initialize is a convenience function only.
+// ALWAYS KEEP THIS TEST LAST, INITIALIZE MODIFIES THE GLOBAL STATE.
+func Test_Initialize(t *testing.T) {
+	Initialize(true, true)
 }

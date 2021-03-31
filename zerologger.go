@@ -43,6 +43,10 @@ const (
 	TagCookie            = "cookie:"
 )
 
+// use a Logger without timestamps,
+// zerologger will hande timestamps according to the Format.
+var Logger = zerolog.New(os.Stdout)
+
 // New creates a new zerolog handler for Fiber.
 //
 // The default Logger middleware from Fiber uses buffers and templates and
@@ -134,13 +138,13 @@ func New(config ...Config) fiber.Handler {
 		var event *zerolog.Event
 		switch {
 		case status == fiber.StatusOK:
-			event = log.Info()
+			event = Logger.Info()
 		case status >= fiber.StatusBadRequest && status < fiber.StatusInternalServerError:
-			event = log.Warn()
+			event = Logger.Warn()
 		case status >= fiber.StatusInternalServerError:
-			event = log.Error()
+			event = Logger.Error()
 		default:
-			event = log.Debug()
+			event = Logger.Debug()
 		}
 
 		for _, tag := range cfg.Format {
@@ -218,6 +222,22 @@ func New(config ...Config) fiber.Handler {
 		// End chain
 		return nil
 	}
+}
+
+// Initialize is a convenience function to configure Zerolog with some sane defaults.
+func Initialize(debug bool, pretty bool) {
+	zerolog.LevelFieldName = "severity"
+
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	if pretty {
+		Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
+	}
+
+	log.Logger = Logger.With().Timestamp().Logger()
 }
 
 var StatusMessage = map[int]string{
