@@ -62,6 +62,18 @@ func configDefault(config ...Config) Config {
 	if cfg.Next == nil {
 		cfg.Next = ConfigDefault.Next
 	}
+	if cfg.Format == nil {
+		cfg.Format = ConfigDefault.Format
+	}
+	if cfg.TimeZone == "" {
+		cfg.TimeZone = ConfigDefault.TimeZone
+	}
+	if cfg.TimeFormat == "" {
+		cfg.TimeFormat = ConfigDefault.TimeFormat
+	}
+	if int(cfg.TimeInterval) <= 0 {
+		cfg.TimeInterval = ConfigDefault.TimeInterval
+	}
 
 	return cfg
 }

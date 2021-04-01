@@ -52,7 +52,7 @@ func Test_Logger(t *testing.T) {
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Format: []string{TagError},
 	}))
 
@@ -75,7 +75,7 @@ func Test_Logger_locals(t *testing.T) {
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Format: []string{"locals:demo"},
 	}))
 
@@ -137,7 +137,7 @@ func Test_Logger_locals(t *testing.T) {
 
 func Test_Logger_Next(t *testing.T) {
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Next: func(_ *fiber.Ctx) bool {
 			return true
 		},
@@ -150,7 +150,7 @@ func Test_Logger_Next(t *testing.T) {
 
 func Test_Logger_ErrorTimeZone(t *testing.T) {
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		TimeZone: "invalid",
 	}))
 
@@ -164,7 +164,7 @@ func Test_Logger_All(t *testing.T) {
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Format: []string{TagPid, TagTime, TagReferer, TagProtocol, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:test", "query:test", "form:test", "cookie:test"},
 	}))
 
@@ -183,7 +183,7 @@ func Test_Query_Params(t *testing.T) {
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Format: []string{TagQueryStringParams},
 	}))
 
@@ -204,7 +204,7 @@ func Test_Response_Body(t *testing.T) {
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Format: []string{TagResBody},
 	}))
 
@@ -242,7 +242,7 @@ func Test_Logger_AppendUint(t *testing.T) {
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Format: []string{
 			TagBytesReceived, TagBytesSent, TagStatus,
 		},
@@ -269,7 +269,7 @@ func Test_Logger_Data_Race(t *testing.T) {
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
-	app.Use(New())
+	app.Use(Fiber())
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("hello")
@@ -299,7 +299,7 @@ func Test_Logger_Redirect(t *testing.T) {
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Format: []string{
 			TagBytesReceived, TagBytesSent, TagStatus,
 		},
@@ -319,7 +319,7 @@ func Benchmark_Logger(b *testing.B) {
 
 	app := fiber.New()
 
-	app.Use(New(Config{
+	app.Use(Fiber(Config{
 		Format: []string{
 			TagBytesReceived, TagBytesSent, TagStatus,
 		},
