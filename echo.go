@@ -20,7 +20,7 @@ import (
 // log directly to Zerolog.
 func Echo(config ...Config) echo.MiddlewareFunc {
 	// Set default config
-	cfg := configDefault(config...)
+	cfg := setConfig(config...)
 
 	// Get timezone location
 	tz, err := time.LoadLocation(cfg.TimeZone)
@@ -181,7 +181,7 @@ func Echo(config ...Config) echo.MiddlewareFunc {
 				}
 			}
 
-			event.Msg(StatusMessage[status])
+			event.Msg(statusMessage[status])
 
 			// End chain
 			return nil

@@ -38,19 +38,13 @@ Some constants have a trailing semicolon. These can be used to extract data from
 package main
 
 import (
-	"os"
-	"time"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
 	"czechia.dev/zerologger"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
 	app := fiber.New()
-	app.Use(zerologger.New(zerologger.Config{
+	app.Use(zerologger.Fiber(zerologger.Config{
 		Format: []string{
 			zerologger.TagTime,
 			zerologger.TagStatus,
@@ -66,41 +60,6 @@ func main() {
 
 	app.Listen(":8080")
 }
-```
-
-## 🧬 Constants
-
-```go
-// Logger variables
-const (
-	TagPid               = "pid"
-	TagTime              = "time"
-	TagReferer           = "referer"
-	TagProtocol          = "protocol"
-	TagID                = "id"
-	TagIP                = "ip"
-	TagIPs               = "ips"
-	TagHost              = "host"
-	TagMethod            = "method"
-	TagPath              = "path"
-	TagURL               = "url"
-	TagUA                = "ua"
-	TagLatency           = "latency"
-	TagStatus            = "status"
-	TagResBody           = "resBody"
-	TagQueryStringParams = "queryParams"
-	TagBody              = "body"
-	TagBytesSent         = "bytesSent"
-	TagBytesReceived     = "bytesReceived"
-	TagRoute             = "route"
-	TagError             = "error"
-
-	TagHeader            = "header:"
-	TagLocals            = "locals:"
-	TagQuery             = "query:"
-	TagForm              = "form:"
-	TagCookie            = "cookie:"
-)
 ```
 
 ## ⏱ Benchmarks

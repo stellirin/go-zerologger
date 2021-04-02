@@ -20,7 +20,7 @@ import (
 // log directly to Zerolog.
 func Fiber(config ...Config) fiber.Handler {
 	// Set default config
-	cfg := configDefault(config...)
+	cfg := setConfig(config...)
 
 	// Get timezone location
 	tz, err := time.LoadLocation(cfg.TimeZone)
@@ -185,7 +185,7 @@ func Fiber(config ...Config) fiber.Handler {
 			}
 		}
 
-		event.Msg(StatusMessage[status])
+		event.Msg(statusMessage[status])
 
 		// End chain
 		return nil

@@ -48,8 +48,8 @@ type Config struct {
 	timeZoneLocation *time.Location
 }
 
-// ConfigDefault is the default config
-var ConfigDefault = Config{
+// defaultConfig is the default config
+var defaultConfig = Config{
 	Skipper:      middleware.DefaultSkipper,
 	Next:         nil,
 	Format:       []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath},
@@ -59,10 +59,10 @@ var ConfigDefault = Config{
 }
 
 // Helper function to set default values
-func configDefault(config ...Config) Config {
+func setConfig(config ...Config) Config {
 	// Return default config if nothing provided
 	if len(config) < 1 {
-		return ConfigDefault
+		return defaultConfig
 	}
 
 	// Override default config
@@ -70,22 +70,22 @@ func configDefault(config ...Config) Config {
 
 	// Set default values
 	if cfg.Skipper == nil {
-		cfg.Skipper = ConfigDefault.Skipper
+		cfg.Skipper = defaultConfig.Skipper
 	}
 	if cfg.Next == nil {
-		cfg.Next = ConfigDefault.Next
+		cfg.Next = defaultConfig.Next
 	}
 	if cfg.Format == nil {
-		cfg.Format = ConfigDefault.Format
+		cfg.Format = defaultConfig.Format
 	}
 	if cfg.TimeZone == "" {
-		cfg.TimeZone = ConfigDefault.TimeZone
+		cfg.TimeZone = defaultConfig.TimeZone
 	}
 	if cfg.TimeFormat == "" {
-		cfg.TimeFormat = ConfigDefault.TimeFormat
+		cfg.TimeFormat = defaultConfig.TimeFormat
 	}
 	if int(cfg.TimeInterval) <= 0 {
-		cfg.TimeInterval = ConfigDefault.TimeInterval
+		cfg.TimeInterval = defaultConfig.TimeInterval
 	}
 
 	return cfg
