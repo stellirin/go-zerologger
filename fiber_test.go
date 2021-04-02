@@ -119,7 +119,7 @@ func Test_Fiber_All(t *testing.T) {
 
 	require.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	expected := fmt.Sprintf(`{"level":"warn","pid":"%d","id":"","referer":"","protocol":"http","ip":"0.0.0.0","ips":"","host":"example.com","method":"GET","path":"/","url":"/?foo=bar","ua":"","status":404,"resBody":"Cannot GET /","queryParams":"foo=bar","body":"","bytesSent":12,"bytesReceived":0,"route":"/","test":"","test":"","test":"","test":"","message":"NotFound"}`, os.Getpid())
+	expected := fmt.Sprintf(`{"level":"warn","pid":"%d","id":"","referer":"","protocol":"http","ip":"0.0.0.0","ips":"","host":"example.com","method":"GET","path":"/","url":"/?foo=bar","ua":"","status":404,"resBody":"Cannot GET /","queryParams":"foo=bar","body":"","bytesSent":12,"bytesReceived":0,"route":"/","test":"","test":"","test":"","test":"","message":"Not Found"}`, os.Getpid())
 	require.Equal(t, expected, strings.TrimSpace(string(data)))
 }
 

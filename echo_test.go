@@ -137,7 +137,7 @@ func Test_Echo_All(t *testing.T) {
 
 	require.Equal(t, http.StatusNotFound, res.Code)
 
-	expected := fmt.Sprintf(`{"level":"warn","pid":"%d","id":"","referer":"","protocol":"HTTP/1.1","ip":"192.0.2.1","ips":"","host":"example.com","method":"GET","path":"/","url":"/?foo=bar","ua":"","status":404,"queryParams":"foo=bar","bytesSent":24,"bytesReceived":0,"route":"/","error":"code=404, message=Not Found","test":"","test":"","test":"","test":"test","message":"NotFound"}`, os.Getpid())
+	expected := fmt.Sprintf(`{"level":"warn","pid":"%d","id":"","referer":"","protocol":"HTTP/1.1","ip":"192.0.2.1","ips":"","host":"example.com","method":"GET","path":"/","url":"/?foo=bar","ua":"","status":404,"queryParams":"foo=bar","bytesSent":24,"bytesReceived":0,"route":"/","error":"code=404, message=Not Found","test":"","test":"","test":"","test":"test","message":"Not Found"}`, os.Getpid())
 	require.Equal(t, expected, strings.TrimSpace(string(data)))
 }
 
