@@ -1,9 +1,9 @@
-# Zerolog middleware for Fiber
+# Zerologger: logger middleware for Echo and Fiber
 
 [![codecov](https://codecov.io/gh/stellirin/fiber-zerologger/branch/main/graph/badge.svg?token=3FRCIF5YDW)](https://codecov.io/gh/stellirin/fiber-zerologger)
 [![Test Action Status](https://github.com/stellirin/fiber-zerologger/workflows/Go/badge.svg)](https://github.com/stellirin/fiber-zerologger/actions?query=workflow%3AGo)
 
-A simple package to use [Zerolog](https://github.com/rs/zerolog) as the Logger for Fiber.
+A simple package to use [Zerolog](https://github.com/rs/zerolog) as the Logger for Echo or Fiber.
 
 ## ⚙️ Installation
 
@@ -13,7 +13,7 @@ go get -u czechia.dev/zerologger
 
 ## 📝 Format
 
-Zerolog middleware for Fiber is heavily based on the default Logger middleware for Fiber. The key differences are:
+Zerologger is based on the default Logger middleware for Fiber. The key differences are:
 
 * uses a slice of strings to define the log format
 * no color output options, zerolog does not support it
@@ -58,9 +58,6 @@ func main() {
 			zerologger.TagMethod,
 			zerologger.TagPath,
 		},
-		TimeFormat:   time.RFC3339,
-		TimeZone:     "UTC",
-		TimeInterval: 500 * time.Millisecond,
 	}))
 
 	app.Get("/", func(ctx *fiber.Ctx) error {
@@ -80,6 +77,7 @@ const (
 	TagTime              = "time"
 	TagReferer           = "referer"
 	TagProtocol          = "protocol"
+	TagID                = "id"
 	TagIP                = "ip"
 	TagIPs               = "ips"
 	TagHost              = "host"
@@ -107,7 +105,7 @@ const (
 
 ## ⏱ Benchmarks
 
-Zerolog middleware for Fiber is _slightly_ slower than the default Fiber logger. Its main advantage is that Zerolog can be configured to produce both structured and pretty logs.
+Zerologger is _slightly_ slower than the default Fiber logger. Its main advantage is that Zerolog can be configured to produce both structured and pretty logs.
 
 Below are some benchmarks with:
 
@@ -116,7 +114,7 @@ Below are some benchmarks with:
 1. Default format with time
 1. **All** tags enabled
 
-This shows that printing logs with the Zerolog middleware for Fiber takes approximately 25% longer than the default Logger middleware, with the gap closing as the number of fields increases.
+This shows that printing logs with Zerologger takes approximately 25% longer than the default Fiber Logger middleware, with the gap closing as the number of fields increases.
 
 This is however still **extremely** efficient, 500ns is a negligible part of processing a request.
 
@@ -134,7 +132,7 @@ Benchmark_Logger-8   	  862860	      1321   ns/op	       8 B/op	       1 allocs/
 PASS
 ```
 
-### Logger
+### Fiber Logger
 
 ```txt
 goos: darwin
