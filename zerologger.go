@@ -15,6 +15,7 @@ const (
 	TagTime              = "time"
 	TagReferer           = "referer"
 	TagProtocol          = "protocol"
+	TagID                = "id"
 	TagIP                = "ip"
 	TagIPs               = "ips"
 	TagHost              = "host"

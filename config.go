@@ -4,13 +4,22 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 // Config defines the Zerolog config for the Fiber middleware.
 //
 // We use the global Zerolog Logger so (currently) there is nothing to configure.
 type Config struct {
+
+	// Skipper defines a function to skip this middleware when returned true.
+	// This field is used only by Echo.
+	//
+	// Optional. Default: nil
+	Skipper middleware.Skipper
+
 	// Next defines a function to skip this middleware when returned true.
+	// This field is used only by Fiber.
 	//
 	// Optional. Default: nil
 	Next func(ctx *fiber.Ctx) bool
@@ -41,6 +50,7 @@ type Config struct {
 
 // ConfigDefault is the default config
 var ConfigDefault = Config{
+	Skipper:      middleware.DefaultSkipper,
 	Next:         nil,
 	Format:       []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath},
 	TimeFormat:   time.RFC3339,
@@ -59,6 +69,9 @@ func configDefault(config ...Config) Config {
 	cfg := config[0]
 
 	// Set default values
+	if cfg.Skipper == nil {
+		cfg.Skipper = ConfigDefault.Skipper
+	}
 	if cfg.Next == nil {
 		cfg.Next = ConfigDefault.Next
 	}

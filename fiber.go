@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Fiber creates a new zerolog handler for Fiber.
+// Fiber creates a new zerolog middleware for Fiber.
 //
 // The default Logger middleware from Fiber uses buffers and templates and
 // writes directly to os.Stderr. This strips out all of that and sends the
@@ -42,7 +42,7 @@ func Fiber(config ...Config) fiber.Handler {
 	var timestamp atomic.Value
 	timestamp.Store(time.Now().In(cfg.timeZoneLocation).Format(cfg.TimeFormat))
 
-	// Update date/time every 750 milliseconds in a separate go routine
+	// Update date/time in a separate go routine
 	for _, tag := range cfg.Format {
 		if tag == TagTime {
 			go func() {
@@ -123,6 +123,8 @@ func Fiber(config ...Config) fiber.Handler {
 				event = event.Str(TagProtocol, ctx.Protocol())
 			case TagPid:
 				event = event.Str(TagPid, pid)
+			case TagID:
+				event = event.Str(TagID, ctx.Get(fiber.HeaderXRequestID))
 			case TagIP:
 				event = event.Str(TagIP, ctx.IP())
 			case TagIPs:

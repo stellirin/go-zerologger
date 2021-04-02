@@ -47,7 +47,7 @@ type StdOut struct {
 	LocalsDemo string `json:"demo"`
 }
 
-func Test_Logger(t *testing.T) {
+func Test_Fiber(t *testing.T) {
 	buf := new(bytes.Buffer)
 	Logger = zerolog.New(buf)
 
@@ -70,7 +70,7 @@ func Test_Logger(t *testing.T) {
 	utils.AssertEqual(t, "some random error", out.Error)
 }
 
-func Test_Logger_locals(t *testing.T) {
+func Test_Fiber_locals(t *testing.T) {
 	buf := new(bytes.Buffer)
 	Logger = zerolog.New(buf)
 
@@ -135,7 +135,7 @@ func Test_Logger_locals(t *testing.T) {
 	utils.AssertEqual(t, "", out.LocalsDemo)
 }
 
-func Test_Logger_Next(t *testing.T) {
+func Test_Fiber_Next(t *testing.T) {
 	app := fiber.New()
 	app.Use(Fiber(Config{
 		Next: func(_ *fiber.Ctx) bool {
@@ -148,7 +148,7 @@ func Test_Logger_Next(t *testing.T) {
 	utils.AssertEqual(t, fiber.StatusNotFound, resp.StatusCode)
 }
 
-func Test_Logger_ErrorTimeZone(t *testing.T) {
+func Test_Fiber_ErrorTimeZone(t *testing.T) {
 	app := fiber.New()
 	app.Use(Fiber(Config{
 		TimeZone: "invalid",
@@ -159,13 +159,13 @@ func Test_Logger_ErrorTimeZone(t *testing.T) {
 	utils.AssertEqual(t, fiber.StatusNotFound, resp.StatusCode)
 }
 
-func Test_Logger_All(t *testing.T) {
+func Test_Fiber_All(t *testing.T) {
 	buf := new(bytes.Buffer)
 	Logger = zerolog.New(buf)
 
 	app := fiber.New()
 	app.Use(Fiber(Config{
-		Format: []string{TagPid, TagTime, TagReferer, TagProtocol, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:test", "query:test", "form:test", "cookie:test"},
+		Format: []string{TagPid, TagID, TagReferer, TagProtocol, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:test", "query:test", "form:test", "cookie:test"},
 	}))
 
 	resp, err := app.Test(httptest.NewRequest("GET", "/?foo=bar", nil))
@@ -174,11 +174,11 @@ func Test_Logger_All(t *testing.T) {
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, fiber.StatusNotFound, resp.StatusCode)
 
-	expected := fmt.Sprintf(`{"level":"warn","pid":"%d","time":"","referer":"","protocol":"http","ip":"0.0.0.0","ips":"","host":"example.com","method":"GET","path":"/","url":"/?foo=bar","ua":"","status":404,"resBody":"Cannot GET /","queryParams":"foo=bar","body":"","bytesSent":12,"bytesReceived":0,"route":"/","test":"","test":"","test":"","test":"","message":"NotFound"}`, os.Getpid())
+	expected := fmt.Sprintf(`{"level":"warn","pid":"%d","id":"","referer":"","protocol":"http","ip":"0.0.0.0","ips":"","host":"example.com","method":"GET","path":"/","url":"/?foo=bar","ua":"","status":404,"resBody":"Cannot GET /","queryParams":"foo=bar","body":"","bytesSent":12,"bytesReceived":0,"route":"/","test":"","test":"","test":"","test":"","message":"NotFound"}`, os.Getpid())
 	utils.AssertEqual(t, expected, strings.TrimSpace(string(data)))
 }
 
-func Test_Query_Params(t *testing.T) {
+func Test_Fiber_QueryParams(t *testing.T) {
 	buf := new(bytes.Buffer)
 	Logger = zerolog.New(buf)
 
@@ -199,7 +199,7 @@ func Test_Query_Params(t *testing.T) {
 	utils.AssertEqual(t, expected, out.QueryParams)
 }
 
-func Test_Response_Body(t *testing.T) {
+func Test_Fiber_Response_Body(t *testing.T) {
 	buf := new(bytes.Buffer)
 	Logger = zerolog.New(buf)
 
@@ -237,7 +237,7 @@ func Test_Response_Body(t *testing.T) {
 	utils.AssertEqual(t, expectedPostResponse, out.ResBody)
 }
 
-func Test_Logger_AppendUint(t *testing.T) {
+func Test_Fiber_AppendUint(t *testing.T) {
 	buf := new(bytes.Buffer)
 	Logger = zerolog.New(buf)
 
@@ -264,7 +264,7 @@ func Test_Logger_AppendUint(t *testing.T) {
 	utils.AssertEqual(t, 200, out.Status)
 }
 
-func Test_Logger_Data_Race(t *testing.T) {
+func Test_Fiber_Data_Race(t *testing.T) {
 	buf := new(bytes.Buffer)
 	Logger = zerolog.New(buf)
 
@@ -294,7 +294,7 @@ func Test_Logger_Data_Race(t *testing.T) {
 	utils.AssertEqual(t, fiber.StatusOK, resp2.StatusCode)
 }
 
-func Test_Logger_Redirect(t *testing.T) {
+func Test_Fiber_Redirect(t *testing.T) {
 	buf := new(bytes.Buffer)
 	Logger = zerolog.New(buf)
 
@@ -314,7 +314,7 @@ func Test_Logger_Redirect(t *testing.T) {
 	utils.AssertEqual(t, fiber.StatusContinue, resp.StatusCode)
 }
 
-func Benchmark_Logger(b *testing.B) {
+func Benchmark_Fiber(b *testing.B) {
 	Logger = zerolog.New(io.Discard)
 
 	app := fiber.New()
