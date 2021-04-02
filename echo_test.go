@@ -2,7 +2,6 @@ package zerologger_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,9 +12,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gofiber/fiber/v2/utils"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 
 	. "czechia.dev/zerologger"
 )
@@ -38,11 +37,8 @@ func Test_Echo(t *testing.T) {
 	e.ServeHTTP(res, req)
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	err := json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, http.StatusInternalServerError, res.Code)
-	utils.AssertEqual(t, "some random error", out.Error)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
+	require.Contains(t, string(data), `"error":"some random error"`)
 }
 
 func Test_Echo_locals(t *testing.T) {
@@ -69,58 +65,32 @@ func Test_Echo_locals(t *testing.T) {
 		return c.NoContent(http.StatusOK)
 	})
 
-	e.GET("/empty", func(c echo.Context) error {
-		return c.NoContent(http.StatusOK)
-	})
-
 	req := httptest.NewRequest("GET", "/", nil)
 	res := httptest.NewRecorder()
 	e.ServeHTTP(res, req)
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	err := json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, http.StatusOK, res.Code)
-	utils.AssertEqual(t, "johndoe", out.LocalsDemo)
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Contains(t, string(data), `"demo":"johndoe"`)
 
 	req = httptest.NewRequest("GET", "/int", nil)
 	res = httptest.NewRecorder()
 	e.ServeHTTP(res, req)
 	data, _ = io.ReadAll(buf)
 
-	out = new(StdOut)
-	err = json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, http.StatusOK, res.Code)
-	utils.AssertEqual(t, "55", out.LocalsDemo)
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Contains(t, string(data), `"demo":"55"`)
 
 	req = httptest.NewRequest("GET", "/bytes", nil)
 	res = httptest.NewRecorder()
 	e.ServeHTTP(res, req)
 	data, _ = io.ReadAll(buf)
 
-	out = new(StdOut)
-	err = json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, http.StatusOK, res.Code)
-	utils.AssertEqual(t, "55", out.LocalsDemo)
-
-	req = httptest.NewRequest("GET", "/empty", nil)
-	res = httptest.NewRecorder()
-	e.ServeHTTP(res, req)
-	data, _ = io.ReadAll(buf)
-
-	out = new(StdOut)
-	err = json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, http.StatusOK, res.Code)
-	utils.AssertEqual(t, "", out.LocalsDemo)
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Contains(t, string(data), `"demo":"55"`)
 }
 
 func Test_Echo_Next(t *testing.T) {
-	buf := new(bytes.Buffer)
-	Logger = zerolog.New(buf)
 	e := echo.New()
 	e.Use(Echo(Config{
 		Skipper: func(_ echo.Context) bool {
@@ -131,13 +101,10 @@ func Test_Echo_Next(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	res := httptest.NewRecorder()
 	e.ServeHTTP(res, req)
-	utils.AssertEqual(t, http.StatusNotFound, res.Code)
+	require.Equal(t, http.StatusNotFound, res.Code)
 }
 
 func Test_Echo_ErrorTimeZone(t *testing.T) {
-	buf := new(bytes.Buffer)
-	Logger = zerolog.New(buf)
-
 	e := echo.New()
 	e.Use(Echo(Config{
 		TimeZone: "invalid",
@@ -146,7 +113,7 @@ func Test_Echo_ErrorTimeZone(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	res := httptest.NewRecorder()
 	e.ServeHTTP(res, req)
-	utils.AssertEqual(t, http.StatusNotFound, res.Code)
+	require.Equal(t, http.StatusNotFound, res.Code)
 }
 
 func Test_Echo_All(t *testing.T) {
@@ -168,13 +135,10 @@ func Test_Echo_All(t *testing.T) {
 	e.ServeHTTP(res, req)
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	err := json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, http.StatusNotFound, res.Code)
+	require.Equal(t, http.StatusNotFound, res.Code)
 
 	expected := fmt.Sprintf(`{"level":"warn","pid":"%d","id":"","referer":"","protocol":"HTTP/1.1","ip":"192.0.2.1","ips":"","host":"example.com","method":"GET","path":"/","url":"/?foo=bar","ua":"","status":404,"queryParams":"foo=bar","bytesSent":24,"bytesReceived":0,"route":"/","error":"code=404, message=Not Found","test":"","test":"","test":"","test":"test","message":"NotFound"}`, os.Getpid())
-	utils.AssertEqual(t, expected, strings.TrimSpace(string(data)))
+	require.Equal(t, expected, strings.TrimSpace(string(data)))
 }
 
 func Test_Echo_QueryParams(t *testing.T) {
@@ -191,13 +155,8 @@ func Test_Echo_QueryParams(t *testing.T) {
 	e.ServeHTTP(res, req)
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	err := json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, http.StatusNotFound, res.Code)
-
-	expected := "foo=bar&baz=moz"
-	utils.AssertEqual(t, expected, out.QueryParams)
+	require.Equal(t, http.StatusNotFound, res.Code)
+	require.Contains(t, string(data), `"queryParams":"foo=bar&baz=moz"`)
 }
 
 // func Test_Echo_ResponseBody(t *testing.T) {
@@ -224,10 +183,10 @@ func Test_Echo_QueryParams(t *testing.T) {
 
 // 	out := new(StdOut)
 // 	err := json.Unmarshal(data, out)
-// 	utils.AssertEqual(t, nil, err)
+// 	require.Equal(t, nil, err)
 
 // 	expectedGetResponse := "Sample response body"
-// 	utils.AssertEqual(t, expectedGetResponse, out.ResBody)
+// 	require.Equal(t, expectedGetResponse, out.ResBody)
 
 // 	req = httptest.NewRequest("POST", "/test", nil)
 // 	res = httptest.NewRecorder()
@@ -236,10 +195,10 @@ func Test_Echo_QueryParams(t *testing.T) {
 
 // 	out = new(StdOut)
 // 	err = json.Unmarshal(data, out)
-// 	utils.AssertEqual(t, nil, err)
+// 	require.Equal(t, nil, err)
 
 // 	expectedPostResponse := "Post in test"
-// 	utils.AssertEqual(t, expectedPostResponse, out.ResBody)
+// 	require.Equal(t, expectedPostResponse, out.ResBody)
 // }
 
 func Test_Echo_AppendUint(t *testing.T) {
@@ -262,13 +221,10 @@ func Test_Echo_AppendUint(t *testing.T) {
 	e.ServeHTTP(res, req)
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	err := json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, http.StatusOK, res.Code)
-	utils.AssertEqual(t, 0, out.BytesReceived)
-	utils.AssertEqual(t, 5, out.BytesSent)
-	utils.AssertEqual(t, 200, out.Status)
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Contains(t, string(data), `"bytesReceived":0`)
+	require.Contains(t, string(data), `"bytesSent":5`)
+	require.Contains(t, string(data), `"status":200`)
 }
 
 func Test_Echo_Data_Race(t *testing.T) {
@@ -299,10 +255,10 @@ func Test_Echo_Data_Race(t *testing.T) {
 	e.ServeHTTP(res2, req2)
 	wg.Wait()
 
-	utils.AssertEqual(t, nil, err1)
-	utils.AssertEqual(t, http.StatusOK, res1.Code)
-	utils.AssertEqual(t, nil, err2)
-	utils.AssertEqual(t, http.StatusOK, res2.Code)
+	require.Equal(t, nil, err1)
+	require.Equal(t, http.StatusOK, res1.Code)
+	require.Equal(t, nil, err2)
+	require.Equal(t, http.StatusOK, res2.Code)
 }
 
 func Test_Echo_Redirect(t *testing.T) {
@@ -323,7 +279,7 @@ func Test_Echo_Redirect(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	res := httptest.NewRecorder()
 	e.ServeHTTP(res, req)
-	utils.AssertEqual(t, http.StatusPermanentRedirect, res.Code)
+	require.Equal(t, http.StatusPermanentRedirect, res.Code)
 }
 
 // func Benchmark_Echo(b *testing.B) {
@@ -352,5 +308,5 @@ func Test_Echo_Redirect(t *testing.T) {
 // 		h(fctx)
 // 	}
 
-// 	utils.AssertEqual(b, 200, fctx.Response.Header.StatusCode())
+// 	require.Equal(b, 200, fctx.Response.Header.StatusCode())
 // }

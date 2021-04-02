@@ -2,7 +2,6 @@ package zerologger_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,38 +13,12 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/utils"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 	"github.com/valyala/fasthttp"
 
 	. "czechia.dev/zerologger"
 )
-
-type StdOut struct {
-	Severity      string `json:"severity"`
-	Pid           string `json:"pid"`
-	Time          string `json:"time"`
-	Referer       string `json:"referer"`
-	Protocol      string `json:"protocol"`
-	IP            string `json:"ip"`
-	IPs           string `json:"ips"`
-	Host          string `json:"host"`
-	Method        string `json:"method"`
-	Path          string `json:"path"`
-	URL           string `json:"url"`
-	UA            string `json:"ua"`
-	Latency       string `json:"latency"`
-	Status        int    `json:"status"`
-	ResBody       string `json:"resBody"`
-	QueryParams   string `json:"queryParams"`
-	Body          string `json:"body"`
-	BytesSent     int    `json:"bytesSent"`
-	BytesReceived int    `json:"bytesReceived"`
-	Route         string `json:"route"`
-	Error         string `json:"error"`
-
-	LocalsDemo string `json:"demo"`
-}
 
 func Test_Fiber(t *testing.T) {
 	buf := new(bytes.Buffer)
@@ -60,14 +33,11 @@ func Test_Fiber(t *testing.T) {
 		return errors.New("some random error")
 	})
 
-	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
+	res, _ := app.Test(httptest.NewRequest("GET", "/", nil))
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusInternalServerError, resp.StatusCode)
-	utils.AssertEqual(t, "some random error", out.Error)
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+	require.Contains(t, string(data), `"error":"some random error"`)
 }
 
 func Test_Fiber_locals(t *testing.T) {
@@ -94,45 +64,23 @@ func Test_Fiber_locals(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	app.Get("/empty", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusOK)
-	})
-
-	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
+	res, _ := app.Test(httptest.NewRequest("GET", "/", nil))
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusOK, resp.StatusCode)
-	utils.AssertEqual(t, "johndoe", out.LocalsDemo)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Contains(t, string(data), `"demo":"johndoe"`)
 
-	resp, err = app.Test(httptest.NewRequest("GET", "/int", nil))
+	res, _ = app.Test(httptest.NewRequest("GET", "/int", nil))
 	data, _ = io.ReadAll(buf)
 
-	out = new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusOK, resp.StatusCode)
-	utils.AssertEqual(t, "55", out.LocalsDemo)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Contains(t, string(data), `"demo":"55"`)
 
-	resp, err = app.Test(httptest.NewRequest("GET", "/bytes", nil))
+	res, _ = app.Test(httptest.NewRequest("GET", "/bytes", nil))
 	data, _ = io.ReadAll(buf)
 
-	out = new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusOK, resp.StatusCode)
-	utils.AssertEqual(t, "55", out.LocalsDemo)
-
-	resp, err = app.Test(httptest.NewRequest("GET", "/empty", nil))
-	data, _ = io.ReadAll(buf)
-
-	out = new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusOK, resp.StatusCode)
-	utils.AssertEqual(t, "", out.LocalsDemo)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Contains(t, string(data), `"demo":"55"`)
 }
 
 func Test_Fiber_Next(t *testing.T) {
@@ -143,9 +91,8 @@ func Test_Fiber_Next(t *testing.T) {
 		},
 	}))
 
-	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusNotFound, resp.StatusCode)
+	res, _ := app.Test(httptest.NewRequest("GET", "/", nil))
+	require.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
 func Test_Fiber_ErrorTimeZone(t *testing.T) {
@@ -154,9 +101,8 @@ func Test_Fiber_ErrorTimeZone(t *testing.T) {
 		TimeZone: "invalid",
 	}))
 
-	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusNotFound, resp.StatusCode)
+	res, _ := app.Test(httptest.NewRequest("GET", "/", nil))
+	require.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
 func Test_Fiber_All(t *testing.T) {
@@ -168,14 +114,13 @@ func Test_Fiber_All(t *testing.T) {
 		Format: []string{TagPid, TagID, TagReferer, TagProtocol, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:test", "query:test", "form:test", "cookie:test"},
 	}))
 
-	resp, err := app.Test(httptest.NewRequest("GET", "/?foo=bar", nil))
+	res, _ := app.Test(httptest.NewRequest("GET", "/?foo=bar", nil))
 	data, _ := io.ReadAll(buf)
 
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusNotFound, resp.StatusCode)
+	require.Equal(t, http.StatusNotFound, res.StatusCode)
 
 	expected := fmt.Sprintf(`{"level":"warn","pid":"%d","id":"","referer":"","protocol":"http","ip":"0.0.0.0","ips":"","host":"example.com","method":"GET","path":"/","url":"/?foo=bar","ua":"","status":404,"resBody":"Cannot GET /","queryParams":"foo=bar","body":"","bytesSent":12,"bytesReceived":0,"route":"/","test":"","test":"","test":"","test":"","message":"NotFound"}`, os.Getpid())
-	utils.AssertEqual(t, expected, strings.TrimSpace(string(data)))
+	require.Equal(t, expected, strings.TrimSpace(string(data)))
 }
 
 func Test_Fiber_QueryParams(t *testing.T) {
@@ -187,16 +132,11 @@ func Test_Fiber_QueryParams(t *testing.T) {
 		Format: []string{TagQueryStringParams},
 	}))
 
-	resp, err := app.Test(httptest.NewRequest("GET", "/?foo=bar&baz=moz", nil))
+	res, _ := app.Test(httptest.NewRequest("GET", "/?foo=bar&baz=moz", nil))
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusNotFound, resp.StatusCode)
-
-	expected := "foo=bar&baz=moz"
-	utils.AssertEqual(t, expected, out.QueryParams)
+	require.Equal(t, http.StatusNotFound, res.StatusCode)
+	require.Contains(t, string(data), `"queryParams":"foo=bar&baz=moz"`)
 }
 
 func Test_Fiber_Response_Body(t *testing.T) {
@@ -219,22 +159,14 @@ func Test_Fiber_Response_Body(t *testing.T) {
 	_, err := app.Test(httptest.NewRequest("GET", "/", nil))
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-
-	expectedGetResponse := "Sample response body"
-	utils.AssertEqual(t, expectedGetResponse, out.ResBody)
+	require.Equal(t, nil, err)
+	require.Contains(t, string(data), `"resBody":"Sample response body"`)
 
 	_, err = app.Test(httptest.NewRequest("POST", "/test", nil))
 	data, _ = io.ReadAll(buf)
 
-	out = new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-
-	expectedPostResponse := "Post in test"
-	utils.AssertEqual(t, expectedPostResponse, out.ResBody)
+	require.Equal(t, nil, err)
+	require.Contains(t, string(data), `"resBody":"Post in test"`)
 }
 
 func Test_Fiber_AppendUint(t *testing.T) {
@@ -252,16 +184,13 @@ func Test_Fiber_AppendUint(t *testing.T) {
 		return c.SendString("hello")
 	})
 
-	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
+	res, _ := app.Test(httptest.NewRequest("GET", "/", nil))
 	data, _ := io.ReadAll(buf)
 
-	out := new(StdOut)
-	json.Unmarshal(data, out)
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusOK, resp.StatusCode)
-	utils.AssertEqual(t, 0, out.BytesReceived)
-	utils.AssertEqual(t, 5, out.BytesSent)
-	utils.AssertEqual(t, 200, out.Status)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Contains(t, string(data), `"bytesReceived":0`)
+	require.Contains(t, string(data), `"bytesSent":5`)
+	require.Contains(t, string(data), `"status":200`)
 }
 
 func Test_Fiber_Data_Race(t *testing.T) {
@@ -276,22 +205,22 @@ func Test_Fiber_Data_Race(t *testing.T) {
 	})
 
 	var (
-		resp1, resp2 *http.Response
-		err1, err2   error
+		res1, res2 *http.Response
+		err1, err2 error
 	)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		resp1, err1 = app.Test(httptest.NewRequest("GET", "/", nil))
+		res1, err1 = app.Test(httptest.NewRequest("GET", "/", nil))
 		wg.Done()
 	}()
-	resp2, err2 = app.Test(httptest.NewRequest("GET", "/", nil))
+	res2, err2 = app.Test(httptest.NewRequest("GET", "/", nil))
 	wg.Wait()
 
-	utils.AssertEqual(t, nil, err1)
-	utils.AssertEqual(t, fiber.StatusOK, resp1.StatusCode)
-	utils.AssertEqual(t, nil, err2)
-	utils.AssertEqual(t, fiber.StatusOK, resp2.StatusCode)
+	require.Equal(t, nil, err1)
+	require.Equal(t, http.StatusOK, res1.StatusCode)
+	require.Equal(t, nil, err2)
+	require.Equal(t, http.StatusOK, res2.StatusCode)
 }
 
 func Test_Fiber_Redirect(t *testing.T) {
@@ -306,12 +235,11 @@ func Test_Fiber_Redirect(t *testing.T) {
 	}))
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.Redirect("/", fiber.StatusContinue)
+		return c.Redirect("/", http.StatusPermanentRedirect)
 	})
 
-	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
-	utils.AssertEqual(t, nil, err)
-	utils.AssertEqual(t, fiber.StatusContinue, resp.StatusCode)
+	res, _ := app.Test(httptest.NewRequest("GET", "/", nil))
+	require.Equal(t, http.StatusPermanentRedirect, res.StatusCode)
 }
 
 func Benchmark_Fiber(b *testing.B) {
@@ -341,7 +269,7 @@ func Benchmark_Fiber(b *testing.B) {
 		h(fctx)
 	}
 
-	utils.AssertEqual(b, 200, fctx.Response.Header.StatusCode())
+	require.Equal(b, 200, fctx.Response.Header.StatusCode())
 }
 
 // Dummy test for code coverage
