@@ -476,6 +476,9 @@ func Benchmark_Echo(b *testing.B) {
 	app.Use(Echo(Config{
 		Format: []string{
 			TagBytesReceived, TagBytesSent, TagStatus,
+			// TagStatus, TagLatency, TagMethod, TagPath,
+			// TagTime, TagStatus, TagLatency, TagMethod, TagPath,
+			// TagPid, TagTime, TagReferer, TagProtocol, TagID, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagLatency, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:h-test", "locals:l-test", "query:q-test", "form:f-test", "cookie:c-test",
 		},
 		Output: io.Discard,
 	}))

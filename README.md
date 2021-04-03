@@ -13,7 +13,7 @@ go get -u czechia.dev/zerologger
 
 ## 📝 Format
 
-Zerologger is based on the default Logger middleware for Fiber. The key differences are:
+Zerologger was inspired by the default Logger middleware for Fiber, replacing the string buffers with Zerolog Events. The key differences are:
 
 * uses a slice of strings to define the log format
 * no color output options, zerolog does not support it
@@ -30,7 +30,7 @@ Format: []string{
 }
 ```
 
-Some constants have a trailing semicolon. These can be used to extract data from the current context, so that `header:x-test-header` will add `"x-test-header": "test-value"` to the log.
+Some constants have a trailing semicolon. These can be used to extract data from the current context, so that `header:X-Test-Header` will add `"X-Test-Header": "test-value"` to the log.
 
 ## 👀 Example
 
@@ -64,7 +64,7 @@ func main() {
 
 ## ⏱ Benchmarks
 
-Zerologger is _slightly_ slower than the default Fiber logger. Its main advantage is that Zerolog can be configured to produce both structured and pretty logs.
+Zerologger is _slightly_ slower than the default Fiber logger, but faster than the default Echo logger. Its main advantage over both is that Zerologger can be configured to produce either structured logs or pretty logs without editing the custom Format string.
 
 Below are some benchmarks with:
 
@@ -73,9 +73,7 @@ Below are some benchmarks with:
 1. Default format with time
 1. **All** tags enabled
 
-This shows that printing logs with Zerologger takes approximately 25% longer than the default Fiber Logger middleware, with the gap closing as the number of fields increases.
-
-This is however still **extremely** efficient, 500ns is a negligible part of processing a request.
+Despite some 'large' differences in the results between the three loggers, they all perform *great* and none of them will have a noticable impact on your services (your business logic will be orders of magnitude more taxing than the actual logging).
 
 ### Zerologger
 
@@ -84,10 +82,30 @@ goos: darwin
 goarch: amd64
 pkg: czechia.dev/zerologger
 cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
-Benchmark_Logger-8   	 4527990	       264.4 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Logger-8   	 2258288	       506.4 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Logger-8   	 2203069	       536.0 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Logger-8   	  862860	      1321   ns/op	       8 B/op	       1 allocs/op
+Benchmark_Echo-8    	 3066121	       378.6 ns/op	      90 B/op	       2 allocs/op
+Benchmark_Echo-8    	 1908175	       603.6 ns/op	     106 B/op	       2 allocs/op
+Benchmark_Echo-8    	 1866398	       640.0 ns/op	     107 B/op	       2 allocs/op
+Benchmark_Echo-8    	  729704	      1594   ns/op	     187 B/op	       7 allocs/op
+PASS
+
+Benchmark_Fiber-8   	 4939312	       245.8 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Fiber-8   	 2335804	       483.1 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Fiber-8   	 2293968	       515.6 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Fiber-8   	  935451	      1273   ns/op	       8 B/op	       1 allocs/op
+PASS
+```
+
+### Echo Logger
+
+```txt
+goos: darwin
+goarch: amd64
+pkg: github.com/labstack/echo/v4/middleware
+cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+Benchmark_Logger-8   	 2232074	       537.0 ns/op	     151 B/op	       3 allocs/op
+Benchmark_Logger-8   	 2129727	       565.8 ns/op	     156 B/op	       4 allocs/op
+Benchmark_Logger-8   	 1255450	       919.6 ns/op	     182 B/op	       5 allocs/op
+Benchmark_Logger-8   	  624400	      1827   ns/op	     280 B/op	      10 allocs/op
 PASS
 ```
 
