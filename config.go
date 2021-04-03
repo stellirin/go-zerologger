@@ -7,9 +7,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-// Config defines the Zerolog config for the Fiber middleware.
-//
-// We use the global Zerolog Logger so (currently) there is nothing to configure.
+// Config defines the Zerologger config for the middleware.
 type Config struct {
 
 	// Skipper defines a function to skip this middleware when returned true.
@@ -43,6 +41,11 @@ type Config struct {
 	//
 	// Optional. Default: 500 * time.Millisecond
 	TimeInterval time.Duration
+
+	// PrettyLatency prints the latency as a string instead of a number.
+	//
+	// Optional. Default: false
+	PrettyLatency bool
 
 	enableLatency    bool
 	timeZoneLocation *time.Location

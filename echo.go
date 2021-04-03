@@ -125,9 +125,13 @@ func Echo(config ...Config) echo.MiddlewareFunc {
 				case TagUA:
 					event = event.Str(TagUA, req.UserAgent())
 				case TagLatency:
-					event = event.Dur(TagLatency, stop.Sub(start))
+					if cfg.PrettyLatency {
+						event = event.Str(TagLatency, stop.Sub(start).String())
+					} else {
+						event = event.Dur(TagLatency, stop.Sub(start))
+					}
 				case TagBody:
-					// NOOP
+					// NOOP - Echo doesn't support it
 				case TagBytesReceived:
 					cl := req.Header.Get(echo.HeaderContentLength)
 					if cl == "" {
@@ -143,7 +147,7 @@ func Echo(config ...Config) echo.MiddlewareFunc {
 				case TagStatus:
 					event = event.Int(TagStatus, status)
 				case TagResBody:
-					// NOOP
+					// NOOP - Echo doesn't support it
 				case TagQueryStringParams:
 					event = event.Str(TagQueryStringParams, req.URL.RawQuery)
 				case TagMethod:

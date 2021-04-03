@@ -138,7 +138,11 @@ func Fiber(config ...Config) fiber.Handler {
 			case TagUA:
 				event = event.Str(TagUA, ctx.Get(fiber.HeaderUserAgent))
 			case TagLatency:
-				event = event.Dur(TagLatency, stop.Sub(start))
+				if cfg.PrettyLatency {
+					event = event.Str(TagLatency, stop.Sub(start).String())
+				} else {
+					event = event.Dur(TagLatency, stop.Sub(start))
+				}
 			case TagBody:
 				event = event.Bytes(TagBody, ctx.Body())
 			case TagBytesReceived:
