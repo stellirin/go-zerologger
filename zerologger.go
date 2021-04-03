@@ -9,6 +9,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Logger is a new Zerolog Logger without timestamps.
+// Zerologger will hande timestamps according to the Format.
+var Logger zerolog.Logger
+
+func init() {
+	Logger = zerolog.New(os.Stdout)
+}
+
 // Initialize is a convenience function to configure Zerolog with some useful defaults.
 func Initialize(debug bool, pretty bool) {
 	zerolog.LevelFieldName = "severity"
@@ -54,10 +62,6 @@ const (
 	TagForm              = "form:"
 	TagCookie            = "cookie:"
 )
-
-// Logger is a new Zerolog Logger without timestamps.
-// Zerologger will hande timestamps according to the Format.
-var Logger = zerolog.New(os.Stdout)
 
 var statusMessage = map[int]string{
 	http.StatusContinue:                      "Continue",                        // RFC 7231, 6.2.1

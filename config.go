@@ -1,10 +1,12 @@
 package zerologger
 
 import (
+	"io"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog"
 )
 
 // Config defines the Zerologger config for the middleware.
@@ -42,6 +44,12 @@ type Config struct {
 	// Optional. Default: 500 * time.Millisecond
 	TimeInterval time.Duration
 
+	// Output is an io.Writer where logs can be written. Zerologger will copy
+	// the global Logger if Output is not set. Typically used in tests.
+	//
+	// Optional. Default: nil
+	Output io.Writer
+
 	// PrettyLatency prints the latency as a string instead of a number.
 	//
 	// Optional. Default: false
@@ -49,6 +57,7 @@ type Config struct {
 
 	enableLatency    bool
 	timeZoneLocation *time.Location
+	logger           zerolog.Logger
 }
 
 // defaultConfig is the default config
@@ -62,7 +71,7 @@ var defaultConfig = Config{
 }
 
 // Helper function to set default values
-func setConfig(config ...Config) Config {
+func setConfig(config []Config) Config {
 	// Return default config if nothing provided
 	if len(config) < 1 {
 		return defaultConfig
@@ -89,6 +98,11 @@ func setConfig(config ...Config) Config {
 	}
 	if int(cfg.TimeInterval) <= 0 {
 		cfg.TimeInterval = defaultConfig.TimeInterval
+	}
+	if cfg.Output != nil {
+		cfg.logger = zerolog.New(cfg.Output)
+	} else {
+		cfg.logger = Logger
 	}
 
 	return cfg

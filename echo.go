@@ -20,7 +20,7 @@ import (
 // log directly to Zerolog.
 func Echo(config ...Config) echo.MiddlewareFunc {
 	// Set default config
-	cfg := setConfig(config...)
+	cfg := setConfig(config)
 
 	// Get timezone location
 	tz, err := time.LoadLocation(cfg.TimeZone)
@@ -91,13 +91,13 @@ func Echo(config ...Config) echo.MiddlewareFunc {
 			var event *zerolog.Event
 			switch {
 			case status == http.StatusOK:
-				event = Logger.Info()
+				event = cfg.logger.Info()
 			case status >= http.StatusBadRequest && status < http.StatusInternalServerError:
-				event = Logger.Warn()
+				event = cfg.logger.Warn()
 			case status >= http.StatusInternalServerError:
-				event = Logger.Error()
+				event = cfg.logger.Error()
 			default:
-				event = Logger.Debug()
+				event = cfg.logger.Debug()
 			}
 
 			for _, tag := range cfg.Format {
@@ -121,7 +121,7 @@ func Echo(config ...Config) echo.MiddlewareFunc {
 				case TagPath:
 					event = event.Str(TagPath, req.URL.Path)
 				case TagURL:
-					event = event.Str(TagURL, req.URL.RequestURI())
+					event = event.Str(TagURL, req.URL.String())
 				case TagUA:
 					event = event.Str(TagUA, req.UserAgent())
 				case TagLatency:

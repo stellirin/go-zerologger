@@ -20,7 +20,7 @@ import (
 // log directly to Zerolog.
 func Fiber(config ...Config) fiber.Handler {
 	// Set default config
-	cfg := setConfig(config...)
+	cfg := setConfig(config)
 
 	// Get timezone location
 	tz, err := time.LoadLocation(cfg.TimeZone)
@@ -104,13 +104,13 @@ func Fiber(config ...Config) fiber.Handler {
 		var event *zerolog.Event
 		switch {
 		case status == fiber.StatusOK:
-			event = Logger.Info()
+			event = cfg.logger.Info()
 		case status >= fiber.StatusBadRequest && status < fiber.StatusInternalServerError:
-			event = Logger.Warn()
+			event = cfg.logger.Warn()
 		case status >= fiber.StatusInternalServerError:
-			event = Logger.Error()
+			event = cfg.logger.Error()
 		default:
-			event = Logger.Debug()
+			event = cfg.logger.Debug()
 		}
 
 		for _, tag := range cfg.Format {
