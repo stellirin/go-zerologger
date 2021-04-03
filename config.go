@@ -74,7 +74,9 @@ var defaultConfig = Config{
 func setConfig(config []Config) Config {
 	// Return default config if nothing provided
 	if len(config) < 1 {
-		return defaultConfig
+		cfg := defaultConfig
+		cfg.logger = Logger
+		return cfg
 	}
 
 	// Override default config
