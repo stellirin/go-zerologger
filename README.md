@@ -1,7 +1,8 @@
 # Zerologger: logger middleware for Echo and Fiber
 
-[![codecov](https://codecov.io/gh/stellirin/go-zerologger/branch/main/graph/badge.svg?token=h5zC6Okqjz)](https://codecov.io/gh/stellirin/go-zerologger)
-[![Test Action Status](https://github.com/stellirin/go-zerologger/workflows/Go/badge.svg)](https://github.com/stellirin/go-zerologger/actions?query=workflow%3AGo)
+[![coverage](https://codecov.io/gh/stellirin/go-zerologger/branch/main/graph/badge.svg?token=h5zC6Okqjz)](https://codecov.io/gh/stellirin/go-zerologger)
+[![tests](https://github.com/stellirin/go-zerologger/workflows/Go/badge.svg)](https://github.com/stellirin/go-zerologger/actions?query=workflow%3AGo)
+[![report](https://goreportcard.com/badge/czechia.dev/zerologger)](https://goreportcard.com/report/czechia.dev/zerologger)
 
 A simple package to use [Zerolog](https://github.com/rs/zerolog) as the Logger for Echo or Fiber.
 
