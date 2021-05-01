@@ -4,7 +4,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 )
@@ -17,12 +16,6 @@ type Config struct {
 	//
 	// Optional. Default: nil
 	Skipper middleware.Skipper
-
-	// Next defines a function to skip this middleware when returned true.
-	// This field is used only by Fiber.
-	//
-	// Optional. Default: nil
-	Next func(ctx *fiber.Ctx) bool
 
 	// Format defines the logging tags
 	//
@@ -63,7 +56,6 @@ type Config struct {
 // defaultConfig is the default config
 var defaultConfig = Config{
 	Skipper:      middleware.DefaultSkipper,
-	Next:         nil,
 	Format:       []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath},
 	TimeFormat:   time.RFC3339,
 	TimeZone:     "Local",
@@ -85,9 +77,6 @@ func setConfig(config []Config) Config {
 	// Set default values
 	if cfg.Skipper == nil {
 		cfg.Skipper = defaultConfig.Skipper
-	}
-	if cfg.Next == nil {
-		cfg.Next = defaultConfig.Next
 	}
 	if cfg.Format == nil {
 		cfg.Format = defaultConfig.Format
