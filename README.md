@@ -15,7 +15,7 @@ go get -u czechia.dev/zerologger
 
 ## 📝 Format
 
-Zerologger was inspired by the default Logger middleware, replacing the string buffers and templates with Zerolog Events. The key differences are:
+Zerologger was inspired by the default Logger middleware in Fiber, replacing the string buffers and templates with Zerolog Events. The key differences are:
 
 * uses a slice of strings to define the log format
 * no color output options, zerolog does not support it
@@ -68,41 +68,41 @@ func main() {
 
 ## ⏱ Benchmarks
 
-Zerologger is faster than the default Echo logger and with fewer allocations. It also has the advantage that Zerologger can be configured to produce either structured logs or pretty logs without editing the custom Format string.
+Zerologger is faster than the default Echo logger and with fewer allocations. Zerologger significantly reduces the latency when logging with Timestamps. It also has the advantage that Zerologger can be configured to produce either structured logs or pretty logs without editing the custom Format string.
 
 Below are some benchmarks with:
 
-1. Benchmark format
-1. Default format without time
-1. Default format with time
+1. Minimal format
+1. Default format, no time
+1. Default format
+1. **All** tags enabled, no time
 1. **All** tags enabled
 
 Despite some 'large' differences in the results between the two loggers, they both perform *great* and neither will have a noticable impact on your services (your business logic will be orders of magnitude more taxing than the actual logging).
 
-### Zerologger
+### Results
 
 ```txt
 goos: darwin
 goarch: amd64
 pkg: czechia.dev/zerologger
 cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
-Benchmark_Echo-8    	 3066121	       378.6 ns/op	      90 B/op	       2 allocs/op
-Benchmark_Echo-8    	 1908175	       603.6 ns/op	     106 B/op	       2 allocs/op
-Benchmark_Echo-8    	 1866398	       640.0 ns/op	     107 B/op	       2 allocs/op
-Benchmark_Echo-8    	  729704	      1594   ns/op	     187 B/op	       7 allocs/op
-PASS
-```
 
-### Echo Logger
+Benchmark_Zerologger/Minimal-8           2927076               389.5 ns/op            91 B/op          2 allocs/op
+Benchmark_Echo/Minimal-8                 2093095               561.6 ns/op           153 B/op          3 allocs/op
 
-```txt
-goos: darwin
-goarch: amd64
-pkg: github.com/labstack/echo/v4/middleware
-cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
-Benchmark_Logger-8   	 2232074	       537.0 ns/op	     151 B/op	       3 allocs/op
-Benchmark_Logger-8   	 2129727	       565.8 ns/op	     156 B/op	       4 allocs/op
-Benchmark_Logger-8   	 1255450	       919.6 ns/op	     182 B/op	       5 allocs/op
-Benchmark_Logger-8   	  624400	      1827   ns/op	     280 B/op	      10 allocs/op
+Benchmark_Zerologger/DefaultNoTime-8     1863060               621.1 ns/op           107 B/op          2 allocs/op
+Benchmark_Echo/DefaultNoTime-8           2074165               581.6 ns/op           157 B/op          4 allocs/op
+
+Benchmark_Zerologger/Default-8           1765065               665.6 ns/op           109 B/op          2 allocs/op
+Benchmark_Echo/Default-8                 1250151               982.3 ns/op           182 B/op          5 allocs/op
+
+Benchmark_Zerologger/MaximumNoTime-8      874166              1378   ns/op           206 B/op          7 allocs/op
+Benchmark_Echo/MaximumNoTime-8            809390              1437   ns/op           266 B/op          9 allocs/op
+
+Benchmark_Zerologger/Maximum-8            768734              1413   ns/op           186 B/op          7 allocs/op
+Benchmark_Echo/Maximum-8                  564432              1845   ns/op           284 B/op         10 allocs/op
+
 PASS
+ok      czechia.dev/zerologger  14.658s
 ```

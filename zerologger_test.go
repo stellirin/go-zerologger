@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/require"
 
 	. "czechia.dev/zerologger"
@@ -471,36 +472,179 @@ func Test_Redirect(t *testing.T) {
 	require.Equal(t, http.StatusPermanentRedirect, res.Code)
 }
 
-func Benchmark_Echo(b *testing.B) {
-	e := echo.New()
-	e.Use(New(Config{
-		Format: []string{
-			TagBytesReceived, TagBytesSent, TagStatus,
-			// TagStatus, TagLatency, TagMethod, TagPath,
-			// TagTime, TagStatus, TagLatency, TagMethod, TagPath,
-			// TagPid, TagTime, TagReferer, TagProtocol, TagID, TagIP, TagIPs, TagHost, TagMethod, TagPath, TagURL, TagUA, TagLatency, TagStatus, TagResBody, TagQueryStringParams, TagBody, TagBytesSent, TagBytesReceived, TagRoute, TagError, "header:h-test", "locals:l-test", "query:q-test", "form:f-test", "cookie:c-test",
-		},
-		Output: io.Discard,
-	}))
+// For coverage only
+func Test_Initialize(t *testing.T) {
+	Initialize(true, true)
+}
+
+func newBenchmark(m echo.MiddlewareFunc) (e *echo.Echo, req *http.Request, res *httptest.ResponseRecorder) {
+	e = echo.New()
+	e.Use(m)
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	res := httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, "/", nil)
+	res = httptest.NewRecorder()
 
-	b.ReportAllocs()
-	b.ResetTimer()
-
-	for n := 0; n < b.N; n++ {
-		e.ServeHTTP(res, req)
-	}
-
-	require.Equal(b, http.StatusOK, res.Code)
+	return
 }
 
-// For coverage only
-func Test_Initialize(t *testing.T) {
-	Initialize(true, true)
+func Benchmark_Echo(b *testing.B) {
+	type run struct {
+		name   string
+		format string
+	}
+
+	runs := []run{
+		{
+			name: "Minimal",
+			format: `{` +
+				`"bytes_in":${bytes_in},` +
+				`"bytes_out":${bytes_out},` +
+				`"status":${status}` +
+				`}`,
+		},
+		{
+			name: "DefaultNoTime",
+			format: `{` +
+				`"status":${status},` +
+				`"latency":${latency},` +
+				`"method":"${method}",` +
+				`"path":"${path}"` +
+				`}`,
+		},
+		{
+			name: "Default",
+			format: `{` +
+				`"time":"${time_rfc3339}",` +
+				`"status":${status},` +
+				`"latency":${latency},` +
+				`"method":"${method}",` +
+				`"path":"${path}"` +
+				`}`,
+		},
+		{
+			name: "MaximumNoTime",
+			format: `{` +
+				`"referer":"${referer}",` +
+				`"protocol":"${protocol}",` +
+				`"id":"${id}",` +
+				`"remote_ip":"${remote_ip}",` +
+				`"host":"${host}",` +
+				`"method":"${method}",` +
+				`"path":"${path}",` +
+				`"uri":"${uri}",` +
+				`"user_agent":"${user_agent}",` +
+				`"latency":${latency},` +
+				`"status":${status},` +
+				`"bytes_out":${bytes_out},` +
+				`"bytes_in":${bytes_in},` +
+				`"error":${error},` +
+				`"header":"${header:h-test}",` +
+				`"query":"${query:q-test}",` +
+				`"form":"${form:f-test}"` +
+				`}`,
+		},
+		{
+			name: "Maximum",
+			format: `{` +
+				`"time":"${time_rfc3339}",` +
+				`"referer":"${referer}",` +
+				`"protocol":"${protocol}",` +
+				`"id":"${id}",` +
+				`"remote_ip":"${remote_ip}",` +
+				`"host":"${host}",` +
+				`"method":"${method}",` +
+				`"path":"${path}",` +
+				`"uri":"${uri}",` +
+				`"user_agent":"${user_agent}",` +
+				`"latency":${latency},` +
+				`"status":${status},` +
+				`"bytes_out":${bytes_out},` +
+				`"bytes_in":${bytes_in},` +
+				`"error":${error},` +
+				`"header":"${header:h-test}",` +
+				`"query":"${query:q-test}",` +
+				`"form":"${form:f-test}"` +
+				`}`,
+		},
+	}
+
+	for _, v := range runs {
+		b.Run(v.name, func(b *testing.B) {
+			e, req, res := newBenchmark(middleware.LoggerWithConfig(middleware.LoggerConfig{
+				Format: v.format,
+				Output: io.Discard,
+			}))
+
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for n := 0; n < b.N; n++ {
+				e.ServeHTTP(res, req)
+			}
+
+			require.Equal(b, http.StatusOK, res.Code)
+		})
+	}
+}
+
+func Benchmark_Zerologger(b *testing.B) {
+	type run struct {
+		name   string
+		format []string
+	}
+
+	runs := []run{
+		{
+			name: "Minimal",
+			format: []string{
+				TagBytesReceived, TagBytesSent, TagStatus,
+			},
+		},
+		{
+			name: "DefaultNoTime",
+			format: []string{
+				TagStatus, TagLatency, TagMethod, TagPath,
+			},
+		},
+		{
+			name: "Default",
+			format: []string{
+				TagTime, TagStatus, TagLatency, TagMethod, TagPath,
+			},
+		},
+		{
+			name: "MaximumNoTime",
+			format: []string{
+				TagReferer, TagProtocol, TagID, TagIP, TagHost, TagMethod, TagPath, TagURL, TagUA, TagLatency, TagStatus, TagBytesSent, TagBytesReceived, TagError, "header:h-test", "query:q-test", "form:f-test",
+			},
+		},
+		{
+			name: "Maximum",
+			format: []string{
+				TagTime, TagReferer, TagProtocol, TagID, TagIP, TagHost, TagMethod, TagPath, TagURL, TagUA, TagLatency, TagStatus, TagBytesSent, TagBytesReceived, TagError, "header:h-test", "query:q-test", "form:f-test",
+			},
+		},
+	}
+
+	for _, v := range runs {
+		b.Run(v.name, func(b *testing.B) {
+			e, req, res := newBenchmark(New(Config{
+				Format: v.format,
+				Output: io.Discard,
+			}))
+
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for n := 0; n < b.N; n++ {
+				e.ServeHTTP(res, req)
+			}
+
+			require.Equal(b, http.StatusOK, res.Code)
+		})
+	}
 }
