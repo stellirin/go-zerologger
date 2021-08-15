@@ -16,6 +16,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
 	. "czechia.dev/zerologger"
@@ -474,7 +475,14 @@ func Test_Redirect(t *testing.T) {
 
 // For coverage only
 func Test_Initialize(t *testing.T) {
-	Initialize(true, true)
+	Initialize(zerolog.LevelPanicValue, true)
+	Initialize(zerolog.LevelFatalValue, true)
+	Initialize(zerolog.LevelErrorValue, true)
+	Initialize(zerolog.LevelWarnValue, true)
+	Initialize(zerolog.LevelInfoValue, true)
+	Initialize(zerolog.LevelDebugValue, true)
+	Initialize(zerolog.LevelTraceValue, true)
+	Initialize("foo", true)
 }
 
 func newBenchmark(m echo.MiddlewareFunc) (e *echo.Echo, req *http.Request, res *httptest.ResponseRecorder) {

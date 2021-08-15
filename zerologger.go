@@ -203,12 +203,26 @@ func New(config ...Config) echo.MiddlewareFunc {
 }
 
 // Initialize is a convenience function to configure Zerolog with some useful defaults.
-func Initialize(debug bool, pretty bool) {
+func Initialize(level string, pretty bool) {
 	zerolog.LevelFieldName = "severity"
 
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if debug {
+	switch level {
+	case zerolog.LevelTraceValue:
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	case zerolog.LevelDebugValue:
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case zerolog.LevelInfoValue:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case zerolog.LevelWarnValue:
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case zerolog.LevelErrorValue:
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case zerolog.LevelFatalValue:
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case zerolog.LevelPanicValue:
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
 	if pretty {
