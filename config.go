@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 // Config defines the Zerologger config for the middleware.
@@ -19,22 +20,22 @@ type Config struct {
 
 	// Format defines the logging tags
 	//
-	// Optional. Default: 'time status latency method path'
+	// Optional. Default: []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath}
 	Format []string
-
-	// TimeFormat https://programming.guide/go/format-parse-string-time-date-example.html
-	//
-	// Optional. Default: time.RFC3339
-	TimeFormat string
 
 	// TimeZone can be specified, such as "UTC" and "America/New_York" and "Asia/Chongqing", etc
 	//
 	// Optional. Default: "Local"
 	TimeZone string
 
+	// TimeFormat https://programming.guide/go/format-parse-string-time-date-example.html
+	//
+	// Optional. Default: time.RFC3339
+	TimeFormat string
+
 	// TimeInterval is the delay before the timestamp is updated
 	//
-	// Optional. Default: 500 * time.Millisecond
+	// Optional. Default: 500 * time.Millisecond, Minimum: 500 * time.Millisecond
 	TimeInterval time.Duration
 
 	// Output is an io.Writer where logs can be written. Zerologger will copy
@@ -53,48 +54,35 @@ type Config struct {
 	logger           zerolog.Logger
 }
 
-// defaultConfig is the default config
-var defaultConfig = Config{
-	Skipper:      middleware.DefaultSkipper,
-	Format:       []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath},
-	TimeFormat:   time.RFC3339,
-	TimeZone:     "Local",
-	TimeInterval: 500 * time.Millisecond,
-}
-
 // Helper function to set default values
-func setConfig(config []Config) Config {
-	// Return default config if nothing provided
-	if len(config) < 1 {
-		cfg := defaultConfig
-		cfg.logger = Logger
-		return cfg
+func setConfig(config ...Config) (cfg Config) {
+	if len(config) > 0 {
+		cfg = config[0]
 	}
-
-	// Override default config
-	cfg := config[0]
 
 	// Set default values
 	if cfg.Skipper == nil {
-		cfg.Skipper = defaultConfig.Skipper
-	}
-	if cfg.Format == nil {
-		cfg.Format = defaultConfig.Format
-	}
-	if cfg.TimeZone == "" {
-		cfg.TimeZone = defaultConfig.TimeZone
-	}
-	if cfg.TimeFormat == "" {
-		cfg.TimeFormat = defaultConfig.TimeFormat
-	}
-	if int(cfg.TimeInterval) <= 0 {
-		cfg.TimeInterval = defaultConfig.TimeInterval
-	}
-	if cfg.Output != nil {
-		cfg.logger = zerolog.New(cfg.Output)
-	} else {
-		cfg.logger = Logger
+		cfg.Skipper = middleware.DefaultSkipper
 	}
 
-	return cfg
+	if cfg.Format == nil {
+		cfg.Format = []string{TagTime, TagStatus, TagLatency, TagMethod, TagPath}
+	}
+
+	if cfg.TimeZone == "" {
+		cfg.TimeZone = "Local"
+	}
+	if cfg.TimeFormat == "" {
+		cfg.TimeFormat = time.RFC3339
+	}
+	if cfg.TimeInterval < 500*time.Millisecond {
+		cfg.TimeInterval = 500 * time.Millisecond
+	}
+
+	cfg.logger = log.Logger
+	if cfg.Output != nil {
+		cfg.logger = log.Logger.Output(cfg.Output)
+	}
+
+	return
 }

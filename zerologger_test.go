@@ -475,6 +475,7 @@ func Test_Redirect(t *testing.T) {
 
 // For coverage only
 func Test_Initialize(t *testing.T) {
+	Initialize("", true)
 	Initialize(zerolog.LevelPanicValue, true)
 	Initialize(zerolog.LevelFatalValue, true)
 	Initialize(zerolog.LevelErrorValue, true)
